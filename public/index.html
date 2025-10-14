@@ -81,29 +81,31 @@
         /* Wordmark under the logo should match width/alignment and be white */
         .wordmark {
             width: var(--logo-size);
-            margin: 0 auto 20px;
+            margin: 6px auto 20px;
             background: none !important;
             -webkit-background-clip: initial !important;
             -webkit-text-fill-color: #FFFFFF !important;
             color: #FFFFFF !important;
-            line-height: 0.9;
-            letter-spacing: 0; /* base, refined per line */
+            line-height: 0.88;
         }
 
-        .wordmark .line1,
-        .wordmark .line2 {
+        .wordmark .line {
             display: block;
+            white-space: nowrap;
             text-align: center;
+            font-weight: 800;
+            transform-origin: center top;
+            will-change: transform;
         }
 
-        .wordmark .line1 { /* "karma" */
-            font-size: 2.75rem;
-            letter-spacing: 0.04em;
+        /* Base sizes — width is force-fit via JS scaleX */
+        .wordmark .line1 { /* karma */
+            font-size: calc(var(--logo-size) * 0.34);
+            letter-spacing: 0.01em;
         }
-
-        .wordmark .line2 { /* "KARAOKE" – a bit more spacing to visually match width */
-            font-size: 2.75rem;
-            letter-spacing: 0.18em;
+        .wordmark .line2 { /* KARAOKE */
+            font-size: calc(var(--logo-size) * 0.28);
+            letter-spacing: 0.12em;
         }
 
         .tagline {
@@ -334,7 +336,7 @@
             <div class="logo-container">
                 <img src="/karma-karaoke-logo-alien.png" alt="Karma Karaoke Logo" class="logo">
             </div>
-            <h1 class="wordmark"><span class="line1">karma</span><span class="line2">KARAOKE</span></h1>
+            <h1 class="wordmark"><span class="line line1">karma</span><span class="line line2">KARAOKE</span></h1>
             <p class="tagline">Turn Reddit Comments Into AI Songs</p>
 
             <div class="cta-buttons">
@@ -483,5 +485,25 @@ npm run build</code></pre>
         </div>
     </footer>
     <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script>
+      (function () {
+        function fitLines() {
+          var container = document.querySelector('.wordmark');
+          if (!container) return;
+          var width = container.clientWidth;
+          container.querySelectorAll('.line').forEach(function (el) {
+            el.style.transform = 'scaleX(1)'; // reset to measure natural width
+            // Force reflow
+            var w = el.scrollWidth || el.offsetWidth;
+            if (w > 0 && width > 0) {
+              var scale = width / w;
+              el.style.transform = 'scaleX(' + scale.toFixed(4) + ')';
+            }
+          });
+        }
+        window.addEventListener('load', fitLines);
+        window.addEventListener('resize', fitLines);
+      })();
+    </script>
 </body>
 </html>
