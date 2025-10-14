@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./landing/logo.png" alt="Karma Karaoke Logo" width="200" height="200">
+  <img src="https://karma-karaoke-landing-qr5nsauom-justins-projects-9835cbd6.vercel.app/logo.png" alt="Karma Karaoke Logo" width="200" height="200">
 
   # karma KARAOKE
 
@@ -80,6 +80,31 @@ Transform Reddit's comment section into a collaborative songwriting studio. User
 1. Install the app in your subreddit:
    ```
    https://developers.reddit.com/apps/karma-karaoke
+
+### For Developers
+
+Use these steps to link this repo to your already-created Reddit app, upload a build, and test it.
+
+1. Log in to Devvit CLI
+   - Run: `npx devvit login --copy-paste`
+   - A URL will be shown. Open it, approve, copy the code back to the terminal.
+2. Link this project to your Reddit app
+   - Run: `npx devvit init Ch5peVE5Mlk2aXFxdzF2emFGaXBHc2FkMm43NklTbWcSDWthcm1hLWthcmFva2UaCWhlbGxvLXdlYg==`
+   - Do not use `--force`. This records the remote app mapping without scaffolding.
+3. Build and upload a new version
+   - Run: `npm run build`
+   - Run: `npm run upload -- --bump patch`
+4. Install to a test subreddit you moderate
+   - Run: `npx devvit install karma-karaoke@latest r/<your-test-subreddit>`
+5. Live dev loop (optional)
+   - Run: `npm run playtest`
+
+App setting required for audio generation:
+- Set your Segmind API key: `npx devvit settings set SEGMIND_API_KEY`
+- The app will retrieve this value at runtime via `context.settings`.
+
+If the CLI shows an Unimplemented error for settings:
+- In your subreddit (as a moderator), open the menu action "Configure Segmind API Key" and paste the key there. This stores it temporarily in app storage until the platform settings RPC is available.
    ```
 
 2. Create a new round:

@@ -129,8 +129,33 @@ export class KiroHooks {
         return;
       }
 
+      // Resolve API key from app settings (fallback to injected generator if unset)
+      let generator = this.audioGenerator;
+      try {
+        const apiKey = await context.settings.get('SEGMIND_API_KEY');
+        if (typeof apiKey === 'string' && apiKey.length > 0) {
+          generator = new AudioGenerator(context.redis, apiKey);
+        } else {
+          // Fallback: temporary Redis-stored secret set via mod-only form
+          const redisKey = await context.redis.get('secret:SEGMIND_API_KEY');
+          if (typeof redisKey === 'string' && redisKey.length > 0) {
+            generator = new AudioGenerator(context.redis, redisKey);
+          } else {
+            console.log('SEGMIND_API_KEY not found (settings/redis); using injected AudioGenerator');
+          }
+        }
+      } catch (e) {
+        // If settings service is unavailable, try Redis fallback
+        const redisKey = await context.redis.get('secret:SEGMIND_API_KEY');
+        if (typeof redisKey === 'string' && redisKey.length > 0) {
+          generator = new AudioGenerator(context.redis, redisKey);
+        } else {
+          console.log('Unable to load SEGMIND_API_KEY from settings; no redis fallback; using injected AudioGenerator');
+        }
+      }
+
       // Generate audio
-      const result = await this.audioGenerator.generateSong(
+      const result = await generator.generateSong(
         postId,
         lyrics,
         round.prompt

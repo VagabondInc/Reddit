@@ -1,10 +1,58 @@
-import { Devvit, useState } from '@devvit/public-api';
+import { Devvit, useState, SettingScope } from '@devvit/public-api';
 
 // Configure Devvit plugins
 Devvit.configure({
   redditAPI: true,
   redis: true,
   http: true,
+});
+
+// Global app settings
+Devvit.addSettings([
+  {
+    type: 'string',
+    name: 'SEGMIND_API_KEY',
+    label: 'Segmind API Key',
+    scope: SettingScope.App,
+    isSecret: true,
+  },
+]);
+
+// Temporary admin form to configure Segmind key when Devvit settings are unavailable.
+const segmindForm = Devvit.createForm(
+  {
+    title: 'Configure Segmind',
+    acceptLabel: 'Save',
+    cancelLabel: 'Cancel',
+    fields: [
+      {
+        type: 'string',
+        name: 'apiKey',
+        label: 'Segmind API Key',
+      },
+    ],
+  },
+  async (event, context) => {
+    const apiKey = (event.values?.apiKey ?? '').toString().trim();
+    if (!apiKey) {
+      context.ui.showToast('No key entered.');
+      return;
+    }
+    await context.redis.set('secret:SEGMIND_API_KEY', apiKey);
+    context.ui.showToast('Segmind API key saved for this app.');
+  }
+);
+Devvit.addMenuItem({
+  label: 'Configure Segmind API Key',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    try {
+      context.ui.showForm(segmindForm);
+    } catch (e) {
+      context.ui.showToast('Unable to show config form.');
+    }
+  },
 });
 
 // Custom Post Type: Karma Karaoke

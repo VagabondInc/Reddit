@@ -7,6 +7,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "upload": "devvit upload",
     "playtest": "devvit playtest karma-karaoke",
     "clean": "rm -rf dist"
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@types/node": "^24.7.2",
     "devvit": "^0.12.1",
+    "vitest": "^2.1.4",
     "typescript": "^5.9.3"
   }
 }
