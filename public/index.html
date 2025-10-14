@@ -94,18 +94,16 @@
             white-space: nowrap;
             text-align: center;
             font-weight: 800;
-            transform-origin: center top;
-            will-change: transform;
+            font-kerning: none;
+            letter-spacing: 0;
         }
 
-        /* Base sizes — width is force-fit via JS scaleX */
+        /* Base sizes — JS will refine font-size & letter-spacing */
         .wordmark .line1 { /* karma */
             font-size: calc(var(--logo-size) * 0.34);
-            letter-spacing: 0.01em;
         }
         .wordmark .line2 { /* KARAOKE */
             font-size: calc(var(--logo-size) * 0.28);
-            letter-spacing: 0.12em;
         }
 
         .tagline {
@@ -486,21 +484,37 @@ npm run build</code></pre>
     </footer>
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     <script>
+      // Fit each text line to exactly the wrapper width by computing
+      // a font-size (from a base ratio) and compensating with letter-spacing.
       (function () {
+        var BASE_RATIOS = { line1: 0.34, line2: 0.28 }; // relative to wrapper width
+        function textCharCount(el) {
+          var t = (el.textContent || '').trim();
+          // Treat spaces as non-expanding for spacing calc
+          return t.replace(/\s+/g, '').length;
+        }
         function fitLines() {
           var container = document.querySelector('.wordmark');
           if (!container) return;
           var width = container.clientWidth;
-          container.querySelectorAll('.line').forEach(function (el) {
-            el.style.transform = 'scaleX(1)'; // reset to measure natural width
-            // Force reflow
-            var w = el.scrollWidth || el.offsetWidth;
-            if (w > 0 && width > 0) {
-              var scale = width / w;
-              el.style.transform = 'scaleX(' + scale.toFixed(4) + ')';
-            }
+          ['line1', 'line2'].forEach(function (k) {
+            var el = container.querySelector('.' + k);
+            if (!el) return;
+            // Start with base font-size from wrapper width
+            var fs = width * BASE_RATIOS[k];
+            el.style.letterSpacing = '0px';
+            el.style.fontSize = fs.toFixed(2) + 'px';
+            // Measure natural width
+            var natural = el.scrollWidth || el.offsetWidth;
+            if (!natural || natural === width) return;
+            // Compute needed extra spacing across characters to reach container width
+            var chars = Math.max(1, textCharCount(el) - 1);
+            var extra = width - natural;
+            var ls = extra / chars;
+            el.style.letterSpacing = ls.toFixed(3) + 'px';
           });
         }
+        window.addEventListener('DOMContentLoaded', fitLines);
         window.addEventListener('load', fitLines);
         window.addEventListener('resize', fitLines);
       })();
