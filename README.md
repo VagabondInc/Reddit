@@ -35,14 +35,15 @@ Transform Reddit's comment section into a collaborative songwriting studio. User
    - Live leaderboard updates
    - Top 8 lyrics advance to the final song
 
-4. **🎶 AI Mixdown**: After 24 hours, AI generates the song
+4. **🎶 AI Mixdown + Video**: After 24 hours, our server generates the song and an audiogram video
    - Top 8 lines become verse + chorus
-   - Powered by Segmind ACE Step API
-   - Automatic audio generation
+   - Audio via Segmind ACE Step
+   - 10s loop visual via Segmind WAN T2V (prompted by OpenAI)
+   - Looped/muxed to full track with ffmpeg-static
 
-5. **🎉 Song Reveal**: The final track plays directly in the post
-   - Interactive audio player
-   - Contributor credits
+5. **🎉 Song Reveal**: The server uploads a native Reddit video post
+   - Uses Reddit’s built-in video player
+   - Contributor credits in the thread
    - Share your creation!
 
 ## ✨ Features
@@ -59,12 +60,13 @@ Transform Reddit's comment section into a collaborative songwriting studio. User
 
 | Component | Technology |
 |-----------|-----------|
-| **Frontend** | Devvit (Reddit's Interactive Post SDK) |
-| **Backend** | Kiro Hooks & State Management |
-| **Audio** | Segmind API (ACE Step Model) |
-| **Storage** | Redis KV Store |
-| **Language** | TypeScript |
-| **Hosting** | Reddit Platform |
+| **Frontend** | Devvit (Reddit Interactive Posts) |
+| **Orchestration** | Kiro Hooks & State |
+| **Audio** | Segmind ACE Step |
+| **Video** | Segmind WAN 2.2 T2V + ffmpeg-static |
+| **Server** | Vercel Functions (`api/generate.ts`) |
+| **Upload** | Reddit video via Snoowrap |
+| **Storage** | Reddit + Vercel runtime |
 
 ## 🚀 Quick Start
 
@@ -81,9 +83,9 @@ Transform Reddit's comment section into a collaborative songwriting studio. User
    ```
    https://developers.reddit.com/apps/karma-karaoke
 
-### For Developers
+### For Developers (Devvit + Server)
 
-Use these steps to link this repo to your already-created Reddit app, upload a build, and test it.
+Link the Devvit app, deploy the Vercel server, and connect them.
 
 1. Log in to Devvit CLI
    - Run: `npx devvit login --copy-paste`
@@ -99,12 +101,9 @@ Use these steps to link this repo to your already-created Reddit app, upload a b
 5. Live dev loop (optional)
    - Run: `npm run playtest`
 
-App setting required for audio generation:
-- Set your Segmind API key: `npx devvit settings set SEGMIND_API_KEY`
-- The app will retrieve this value at runtime via `context.settings`.
-
-If the CLI shows an Unimplemented error for settings:
-- In your subreddit (as a moderator), open the menu action "Configure Segmind API Key" and paste the key there. This stores it temporarily in app storage until the platform settings RPC is available.
+Devvit app settings:
+- `SERVER_BASE_URL` (e.g. https://your-app.vercel.app)
+- Optional: `SEGMIND_API_KEY` fallback (legacy)
    ```
 
 2. Create a new round:
@@ -112,9 +111,23 @@ If the CLI shows an Unimplemented error for settings:
    - Click "Create Karma Karaoke Round"
    - Post is created automatically!
 
-### For Developers
+### Server (Vercel)
 
-1. Clone the repository:
+Env vars (Vercel Project Settings → Environment Variables):
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` (default: gpt-5-nano)
+- `SEGMIND_API_KEY`
+- `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USERNAME`, `REDDIT_PASSWORD`, `REDDIT_USER_AGENT`
+
+Endpoints:
+- `POST /api/generate` → body: `{ subreddit, prompt, lyrics }` → returns `{ ok, videoPostUrl }`
+
+Local verify:
+```bash
+npm i
+npm run build
+npm test
+```
    ```bash
    git clone https://github.com/yourusername/karma-karaoke.git
    cd karma-karaoke
@@ -257,9 +270,9 @@ Contributions welcome! Please:
 
 ## 🐛 Known Limitations
 
-1. **Audio Playback**: Devvit doesn't natively support embedded audio yet. Generated audio is stored but requires download/upload for now.
-2. **Rate Limiting**: App-wide, not per-user (Devvit limitation)
-3. **Real-time Updates**: Requires user interaction to refresh UI
+1. **Blocks Media**: Interactive posts use the linked Reddit video; inline external media isn’t embedded.
+2. **Rate Limiting**: Reddit API rate limits apply to the server bot.
+3. **Real-time Updates**: UI polls round state; shows Play button when ready.
 
 ## 🔮 Future Enhancements
 

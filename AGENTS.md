@@ -12,6 +12,10 @@ _For each dependency you touch, refresh via **context7** and record below **befo
 |------------|---------|---------|------------------|-------|
 | devvit (@devvit/public-api, CLI) | 0.12.1 | https://context7.dev/reddit/devvit | 2025-10-14 04:12:13 UTC | Reviewed CLI init, upload, settings APIs |
 | vitest | 2.1.9 | https://context7.dev/vitest-dev/vitest | 2025-10-14 04:12:13 UTC | Added minimal unit tests |
+| openai (Node SDK) | 4.59.0 | https://context7.dev/openai/openai-node | 2025-10-14 05:03:00 UTC | Using chat.completions for prompt gen |
+| snoowrap | 1.23.0 | https://context7.dev/not-an-aardvark/snoowrap | 2025-10-14 05:03:00 UTC | Submit native Reddit video |
+| ffmpeg-static | 5.2.0 | https://context7.dev/descriptinc/ffmpeg-ffprobe-static | 2025-10-14 05:03:00 UTC | Static ffmpeg binary on Vercel |
+| fluent-ffmpeg | 2.1.2 | https://context7.dev/fluent-ffmpeg/node-fluent-ffmpeg | 2025-10-14 05:03:00 UTC | Mux looped video + audio |
 
 ## MCP Usage Matrix
 - **context7**: authoritative docs, migrations, deprecations. Use **before any coding**; update Docs Lock.
@@ -51,4 +55,5 @@ npm audit || true
 ---
 
 ## Doc Sync Log
-- 2025-10-14 (UTC): Updated landing/public layout — How to Play to single column; Built With + Get the Code to two-column; removed GitHub card and API key note. No dependency changes.
+- 2025-10-14 (UTC): Updated landing/public layout — How to Play to single column; Built With + Get the Code to two-column; removed GitHub card and API key note.
+- 2025-10-14 (UTC): Added Vercel server (`api/generate.ts`) and dependencies (openai, snoowrap, ffmpeg-static, fluent-ffmpeg). Recorded Docs Lock.

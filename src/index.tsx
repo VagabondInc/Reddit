@@ -16,6 +16,12 @@ Devvit.addSettings([
     scope: SettingScope.App,
     isSecret: true,
   },
+  {
+    type: 'string',
+    name: 'SERVER_BASE_URL',
+    label: 'Server Base URL (Vercel) — e.g. https://karma-karaoke.vercel.app',
+    scope: SettingScope.App,
+  },
 ]);
 
 // Temporary admin form to configure Segmind key when Devvit settings are unavailable.
@@ -125,7 +131,16 @@ Devvit.addCustomPostType({
           </hstack>
         </vstack>
 
-        <text size="small" color="neutral-content-weak">Powered by Devvit & Kiro</text>
+        {/* Show play link when server has published the video */}
+        {round?.videoPostUrl ? (
+          <vstack gap="small" alignment="center middle">
+            <button appearance="primary" onPress={() => context.ui.navigateTo(round.videoPostUrl!)}>
+              ▶️ Play Final Song on Reddit
+            </button>
+          </vstack>
+        ) : (
+          <text size="small" color="neutral-content-weak">Powered by Devvit & Kiro</text>
+        )}
       </vstack>
     );
   },
@@ -136,16 +151,18 @@ Devvit.addMenuItem({
   label: 'Create Karma Karaoke Round',
   location: 'subreddit',
   onPress: async (_event, context) => {
-    const { reddit, ui, redis } = context;
+  const { reddit, ui, redis } = context;
 
     const subreddit = await reddit.getCurrentSubreddit();
-    const post = await reddit.submitPost({
+  const post = await reddit.submitPost({
       title: '🎤 Karma Karaoke Round #1 – Make a Song About Your Least Favorite Subreddit',
       subredditName: subreddit.name,
+      kind: 'custom',
+      customPostType: 'Karma Karaoke',
       preview: (
         <vstack padding="medium" alignment="center middle">
           <text size="large">🎤 Karma Karaoke</text>
-          <text>Loading...</text>
+          <text>Loading…</text>
         </vstack>
       ),
     });
@@ -159,6 +176,7 @@ Devvit.addMenuItem({
       status: 'active',
       startTime: start,
       endTime: end,
+      subredditName: subreddit.name,
     };
     await redis.set(`round:${post.id}`, JSON.stringify(round));
 

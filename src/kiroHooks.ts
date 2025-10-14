@@ -1,6 +1,5 @@
-import { TriggerContext, Comment, Post } from '@devvit/public-api';
+import { TriggerContext, Comment } from '@devvit/public-api';
 import { LyricEngine } from './lyricEngine.js';
-import { AudioGenerator } from './audioGen.js';
 
 export interface RoundState {
   prompt: string;
@@ -8,22 +7,18 @@ export interface RoundState {
   status: 'active' | 'generating' | 'completed';
   startTime: number;
   endTime: number;
-  audioUrl?: string;
+  subredditName?: string;
+  videoPostUrl?: string;
 }
 
 export class KiroHooks {
   private lyricEngine: LyricEngine;
-  private audioGenerator: AudioGenerator;
 
   // Round duration in milliseconds (default: 24 hours)
   private readonly ROUND_DURATION = 24 * 60 * 60 * 1000;
 
-  constructor(
-    lyricEngine: LyricEngine,
-    audioGenerator: AudioGenerator
-  ) {
+  constructor(lyricEngine: LyricEngine) {
     this.lyricEngine = lyricEngine;
-    this.audioGenerator = audioGenerator;
   }
 
   /**
@@ -114,7 +109,7 @@ export class KiroHooks {
       round.status = 'generating';
       await redis.set(roundKey, JSON.stringify(round));
 
-      console.log('Starting audio generation for round', round.roundNumber);
+      console.log('Starting generation for round', round.roundNumber);
 
       // Final vote update
       await this.lyricEngine.updateVotes(postId);
@@ -129,56 +124,48 @@ export class KiroHooks {
         return;
       }
 
-      // Resolve API key from app settings (fallback to injected generator if unset)
-      let generator = this.audioGenerator;
-      try {
-        const apiKey = await context.settings.get('SEGMIND_API_KEY');
-        if (typeof apiKey === 'string' && apiKey.length > 0) {
-          generator = new AudioGenerator(context.redis, apiKey);
-        } else {
-          // Fallback: temporary Redis-stored secret set via mod-only form
-          const redisKey = await context.redis.get('secret:SEGMIND_API_KEY');
-          if (typeof redisKey === 'string' && redisKey.length > 0) {
-            generator = new AudioGenerator(context.redis, redisKey);
-          } else {
-            console.log('SEGMIND_API_KEY not found (settings/redis); using injected AudioGenerator');
-          }
-        }
-      } catch (e) {
-        // If settings service is unavailable, try Redis fallback
-        const redisKey = await context.redis.get('secret:SEGMIND_API_KEY');
-        if (typeof redisKey === 'string' && redisKey.length > 0) {
-          generator = new AudioGenerator(context.redis, redisKey);
-        } else {
-          console.log('Unable to load SEGMIND_API_KEY from settings; no redis fallback; using injected AudioGenerator');
-        }
+      // Invoke external generation server
+      const serverBase = (await context.settings.get('SERVER_BASE_URL')) as string | undefined;
+      if (!serverBase) {
+        console.error('SERVER_BASE_URL not set in app settings');
+        round.status = 'active';
+        await redis.set(roundKey, JSON.stringify(round));
+        return;
       }
 
-      // Generate audio
-      const result = await generator.generateSong(
-        postId,
-        lyrics,
-        round.prompt
-      );
+      const subredditName = round.subredditName || (await context.reddit.getCurrentSubreddit()).name;
+      const resp = await context.http.fetch(`${serverBase.replace(/\/$/, '')}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId,
+          subreddit: subredditName,
+          prompt: round.prompt,
+          lyrics,
+        }),
+      });
+      if (resp.ok) {
+        const data = (await resp.json()) as { ok: boolean; videoPostUrl?: string };
+        if (data.ok) {
+          round.status = 'completed';
+          round.videoPostUrl = data.videoPostUrl;
+          await redis.set(roundKey, JSON.stringify(round));
 
-      if (result.success) {
-        round.status = 'completed';
-        round.audioUrl = result.audioUrl;
-        await redis.set(roundKey, JSON.stringify(round));
+          const contributors = await this.lyricEngine.getContributors(postId);
+          await context.reddit.submitComment({
+            id: postId,
+            text: `🎉 **Song Complete!**\n\nThanks to our lyricists: ${contributors.join(', ')}\n\n▶️ Play it here: ${data.videoPostUrl ?? '(publishing...)'}`,
+          });
 
-        // Get contributors
-        const contributors = await this.lyricEngine.getContributors(postId);
-
-        // Post a completion comment
-        await reddit.submitComment({
-          id: postId,
-          text: `🎉 **Song Complete!**\n\nThanks to our lyricists: ${contributors.join(', ')}\n\nClick the "Play Final Song" button above to hear your creation!`,
-        });
-
-        console.log('Round completed successfully');
+          console.log('Round completed successfully via server');
+        } else {
+          console.error('Server responded with failure for generation');
+          round.status = 'active';
+          await redis.set(roundKey, JSON.stringify(round));
+        }
       } else {
-        console.error('Audio generation failed:', result.error);
-        round.status = 'active'; // Revert to active for retry
+        console.error('HTTP error from generation server:', resp.status);
+        round.status = 'active';
         await redis.set(roundKey, JSON.stringify(round));
       }
     } catch (error) {
