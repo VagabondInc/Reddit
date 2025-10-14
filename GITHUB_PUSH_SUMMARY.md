@@ -108,7 +108,7 @@ On GitHub:
 Follow [DEPLOY_LANDING.md](DEPLOY_LANDING.md):
 1. Add logo to `landing/logo.png`
 2. Deploy to Vercel
-3. Get URL: `https://karma-karaoke.vercel.app`
+3. Production URL: `https://www.karma-karaoke.lol`
 4. Update repository website link
 
 ### 4. Update Documentation

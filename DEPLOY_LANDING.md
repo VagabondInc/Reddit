@@ -6,7 +6,7 @@ Quick guide to deploy the Karma Karaoke landing page to Vercel.
 
 - GitHub account
 - Vercel account (free)
-- Logo file saved as `landing/logo.png`
+ - Logo files saved as `landing/karma-karaoke-logo-dark.png`, `landing/karma-karaoke-logo-full.png`, and `landing/karma-karaoke-logo-trans.png` and served at https://www.karma-karaoke.lol
 
 ## Option 1: One-Click Deploy (Easiest)
 
@@ -46,7 +46,7 @@ Quick guide to deploy the Karma Karaoke landing page to Vercel.
    ```
 
 4. **Get URL**:
-   - Vercel will output: `https://karma-karaoke.vercel.app`
+   - Production domain: `https://www.karma-karaoke.lol`
    - Copy this URL
 
 ## Option 3: GitHub Actions (Auto-Deploy)
@@ -79,12 +79,9 @@ jobs:
 
 ### 1. Add Logo
 
-Make sure `landing/logo.png` exists:
+Make sure logo assets exist in `landing/`:
 ```bash
-cp path/to/your/logo.png landing/logo.png
-git add landing/logo.png
-git commit -m "Add logo"
-git push
+ls landing/karma-karaoke-logo-*.png
 ```
 
 ### 2. Update URLs
@@ -107,7 +104,7 @@ Edit `landing/index.html` and update these links:
 
 Replace placeholder URLs in main README:
 ```markdown
-[![Demo](https://img.shields.io/badge/Demo-Live-7EC4CF)](https://YOUR-ACTUAL-URL.vercel.app)
+[![Demo](https://img.shields.io/badge/Demo-Live-7EC4CF)](https://www.karma-karaoke.lol)
 ```
 
 ### 4. Custom Domain (Optional)
@@ -159,8 +156,8 @@ Already included:
 <!-- Add to <head> in index.html -->
 <meta property="og:title" content="Karma Karaoke - Turn Reddit Comments Into AI Songs">
 <meta property="og:description" content="Collaborative lyric writing game for Reddit. Community votes on lines, AI performs the song!">
-<meta property="og:image" content="https://your-url.vercel.app/logo.png">
-<meta property="og:url" content="https://your-url.vercel.app">
+<meta property="og:image" content="https://www.karma-karaoke.lol/karma-karaoke-logo-trans.png">
+<meta property="og:url" content="https://www.karma-karaoke.lol">
 <meta name="twitter:card" content="summary_large_image">
 ```
 
@@ -191,7 +188,7 @@ Add Google Analytics or Vercel Analytics:
 ### "Build Failed"
 
 Check:
-- `landing/logo.png` exists
+- logo assets exist in `landing/`
 - All HTML is valid
 - `vercel.json` is correct
 

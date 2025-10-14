@@ -36,7 +36,7 @@ No environment variables needed! This is a static site.
 ## 📁 Files
 
 - `index.html` - Main landing page
-- `logo.png` - Karma Karaoke logo (place here)
+- `karma-karaoke-logo-dark.png` / `karma-karaoke-logo-full.png` / `karma-karaoke-logo-trans.png` - Hosted at https://www.karma-karaoke.lol
 - `vercel.json` - Vercel configuration
 - `README.md` - This file
 

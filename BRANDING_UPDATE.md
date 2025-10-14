@@ -135,7 +135,7 @@ transform: translateY(-5px);
 - [x] Build passes
 
 ### Needs Before Deploy ⏳
-- [ ] Add logo.png to `landing/` directory
+- [ ] Add `karma-karaoke-logo-dark.png`, `karma-karaoke-logo-full.png`, and `karma-karaoke-logo-trans.png` to `landing/` directory
 - [ ] Update GitHub URLs in HTML
 - [ ] Update Reddit app URLs
 - [ ] Push to GitHub
@@ -146,7 +146,7 @@ transform: translateY(-5px);
 
 1. **Add Logo**:
    ```bash
-   # Save logo as landing/logo.png
+   # Save logos in landing/
    # Should be 200x200px or larger
    # PNG or WebP format
    ```
@@ -167,7 +167,7 @@ transform: translateY(-5px);
    - Go to vercel.com
    - Import GitHub repo
    - Deploy
-   - Get URL: `https://karma-karaoke.vercel.app`
+   - Production URL: `https://www.karma-karaoke.lol`
 
 5. **Update README.md**:
    - Replace demo URL with actual Vercel URL
@@ -236,7 +236,7 @@ transform: translateY(-5px);
 
 ## ✨ Next Steps
 
-1. Save logo to `landing/logo.png`
+1. Save logos to `landing/karma-karaoke-logo-*.png`
 2. Follow [DEPLOY_LANDING.md](DEPLOY_LANDING.md) guide
 3. Deploy to Vercel
 4. Update all URLs with actual deployment

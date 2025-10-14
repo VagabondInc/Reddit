@@ -1,12 +1,12 @@
 <div align="center">
-  <img src="https://karma-karaoke-landing-qr5nsauom-justins-projects-9835cbd6.vercel.app/logo.png" alt="Karma Karaoke Logo" width="200" height="200">
+  <img src="https://www.karma-karaoke.lol/karma-karaoke-logo-full.png" alt="Karma Karaoke Logo" width="200" height="200">
 
   # karma KARAOKE
 
   **Turn Reddit Comments Into AI Songs**
 
   [![Install on Reddit](https://img.shields.io/badge/Install-Reddit-FF7B9D?style=for-the-badge&logo=reddit&logoColor=white)](https://developers.reddit.com/apps/karma-karaoke)
-  [![Demo](https://img.shields.io/badge/Demo-Live-7EC4CF?style=for-the-badge)](https://karma-karaoke.vercel.app)
+  [![Demo](https://img.shields.io/badge/Demo-karmakaraoke.lol-7EC4CF?style=for-the-badge)](https://www.karma-karaoke.lol)
   [![MIT License](https://img.shields.io/badge/License-MIT-FF9D5C?style=for-the-badge)](./LICENSE)
   [![Hack Reddit 2025](https://img.shields.io/badge/Hack%20Reddit-2025-B89FE8?style=for-the-badge)](https://hackreddit.devpost.com)
 </div>
@@ -276,7 +276,7 @@ Contributions welcome! Please:
 - [Devvit Documentation](https://developers.reddit.com/docs)
 - [Kiro Framework](https://kiro.dev)
 - [Segmind API](https://docs.segmind.com)
-- [Landing Page](https://karma-karaoke.vercel.app)
+- [Landing Page](https://www.karma-karaoke.lol)
 
 ## 💬 Support
 
@@ -292,7 +292,7 @@ Contributions welcome! Please:
   </p>
   <p>
     <a href="https://developers.reddit.com/apps/karma-karaoke">Install on Reddit</a> •
-    <a href="https://karma-karaoke.vercel.app">View Demo</a> •
+    <a href="https://www.karma-karaoke.lol">View Demo</a> •
     <a href="https://github.com/yourusername/karma-karaoke">GitHub</a>
   </p>
   <p>
