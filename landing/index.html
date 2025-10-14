@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karma Karaoke - Turn Reddit Comments Into AI Songs</title>
+    <meta name="description" content="A Reddit party game where the community writes lyrics together, votes on favorites, and an AI performs the final song. Built with Devvit & Kiro.">
+    <link rel="icon" type="image/png" href="./logo.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: #1C1C1C;
+            color: #FFFFFF;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #FF9D5C 0%, #FF7B9D 33%, #B89FE8 66%, #7EC4CF 100%);
+            opacity: 0.05;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            box-shadow: 0 10px 40px rgba(255, 125, 157, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #FF9D5C, #FF7B9D, #B89FE8, #7EC4CF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            color: #A0A0A0;
+            margin-bottom: 40px;
+        }
+
+        /* CTA Buttons */
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF9D5C, #FF7B9D);
+            color: #FFFFFF;
+            box-shadow: 0 4px 20px rgba(255, 125, 157, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 125, 157, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 60px 0;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 125, 157, 0.5);
+            box-shadow: 0 10px 30px rgba(255, 125, 157, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #FF7B9D;
+        }
+
+        .feature-card p {
+            color: #A0A0A0;
+            line-height: 1.8;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 60px 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            margin: 40px 0;
+        }
+
+        .how-it-works h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #FF9D5C, #FF7B9D);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .step-content p {
+            color: #A0A0A0;
+        }
+
+        /* Tech Stack */
+        .tech-stack {
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .tech-stack h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .tech-badges {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .badge {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #A0A0A0;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 60px;
+        }
+
+        footer p {
+            color: #A0A0A0;
+        }
+
+        footer a {
+            color: #FF7B9D;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: #FF9D5C;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .tagline {
+                font-size: 1.2rem;
+            }
+
+            .step {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="./logo.png" alt="Karma Karaoke Logo" class="logo">
+            </div>
+            <h1>karma<br>KARAOKE</h1>
+            <p class="tagline">Turn Reddit Comments Into AI Songs</p>
+
+            <div class="cta-buttons">
+                <a href="https://developers.reddit.com/apps/karma-karaoke" class="btn btn-primary">
+                    🎤 Install on Reddit
+                </a>
+                <a href="https://github.com/yourusername/karma-karaoke" class="btn btn-secondary">
+                    📦 View on GitHub
+                </a>
+            </div>
+        </header>
+
+        <section class="features">
+            <h2>🎵 What Makes It Special</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Collaborate</h3>
+                    <p>Submit your best lyric lines in the comments. One line per comment, unlimited creativity.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⬆️</div>
+                    <h3>Vote</h3>
+                    <p>Upvote the funniest, cleverest, or catchiest lines. The community decides what makes it to the song.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎶</div>
+                    <h3>AI Magic</h3>
+                    <p>After 24 hours, AI generates a complete song from the top 8 lyrics. Hear your words come to life!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏆</div>
+                    <h3>Get Credit</h3>
+                    <p>Top contributors get featured when the song is revealed. Your lyric could be the chorus!</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <div class="container">
+                <h2>🎮 How to Play</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Find a Round</h3>
+                            <p>Look for posts with prompts like "Make a Song About Your Least Favorite Subreddit"</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Submit Lyrics</h3>
+                            <p>Comment with your best one-liners. Be funny, creative, or surprisingly deep. Up to 5 submissions per round.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Upvote Favorites</h3>
+                            <p>Browse others' lyrics and upvote the ones you want in the final song. The leaderboard updates live!</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Hear the Song</h3>
+                            <p>After 24 hours, AI generates the song from top lyrics. Press play and enjoy your creation!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tech-stack">
+            <h2>⚙️ Built With</h2>
+            <div class="tech-badges">
+                <span class="badge">Reddit Devvit</span>
+                <span class="badge">Kiro Framework</span>
+                <span class="badge">TypeScript</span>
+                <span class="badge">Segmind AI</span>
+                <span class="badge">Redis</span>
+                <span class="badge">Interactive Posts</span>
+            </div>
+            <p style="margin-top: 30px; color: #A0A0A0;">
+                Open source • MIT License • Built for Hack Reddit 2025
+            </p>
+        </section>
+
+        <section class="features" style="padding: 40px 0;">
+            <h2>🎯 Perfect For</h2>
+            <div class="feature-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                <div class="feature-card">
+                    <div class="feature-icon">🎭</div>
+                    <h3>Comedy Fans</h3>
+                    <p>Roast your favorite (or least favorite) subreddits with clever lyrics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Creative Minds</h3>
+                    <p>Express yourself through collaborative songwriting.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3>Communities</h3>
+                    <p>Bond with your subreddit through shared creativity.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>
+                Made with ❤️ for <a href="https://hackreddit.devpost.com" target="_blank">Hack Reddit 2025</a>
+            </p>
+            <p style="margin-top: 10px;">
+                <a href="https://github.com/yourusername/karma-karaoke">GitHub</a> •
+                <a href="https://developers.reddit.com/apps/karma-karaoke">Install App</a> •
+                <a href="https://reddit.com/r/devvit">r/Devvit</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

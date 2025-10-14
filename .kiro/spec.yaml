@@ -1,0 +1,117 @@
+name: karma-karaoke
+version: 1.0.0
+description: Kiro configuration for Karma Karaoke game state management
+
+# State specifications
+state:
+  lyricsPool:
+    type: array
+    description: Collection of submitted lyrics with votes
+    schema:
+      - line: string
+      - author: string
+      - votes: number
+      - commentId: string
+      - timestamp: number
+
+  roundState:
+    type: object
+    description: Current round status and metadata
+    schema:
+      prompt: string
+      roundNumber: number
+      status: enum [active, generating, completed]
+      startTime: number
+      endTime: number
+      audioUrl: string?
+
+  voteCount:
+    type: number
+    description: Total vote count across all lyrics
+    default: 0
+
+  roundTimer:
+    type: number
+    description: Timestamp when round ends
+    default: 0
+
+# Hooks configuration
+hooks:
+  onCommentAdd:
+    trigger: comment.create
+    filter:
+      postType: karma-karaoke
+    handler: kiroHooks.onCommentAdd
+    description: Collects lyric submissions from comments
+
+  onVoteChange:
+    trigger: comment.vote
+    filter:
+      postType: karma-karaoke
+    handler: kiroHooks.onVoteChange
+    description: Updates lyric vote counts
+
+  onRoundEnd:
+    trigger: timer.expire
+    filter:
+      key: roundTimer
+    handler: kiroHooks.onRoundEnd
+    description: Triggers audio generation when round ends
+
+  onSchedule:
+    trigger: cron
+    schedule: "0 * * * *" # Every hour
+    handler: kiroHooks.checkExpiredRounds
+    description: Checks for expired rounds
+
+# Steering rules
+steering:
+  autoCuration:
+    enabled: true
+    description: Automatically selects top-voted lyrics
+    minVotes: 1
+    maxLines: 8
+
+  roundReset:
+    enabled: true
+    description: Auto-creates new rounds after completion
+    cooldown: 3600 # 1 hour in seconds
+
+  moderation:
+    enabled: true
+    description: Filters inappropriate content
+    rules:
+      - no-urls
+      - no-spam
+      - length-limits
+
+# Performance settings
+performance:
+  caching:
+    enabled: true
+    ttl: 300 # 5 minutes
+
+  rateLimit:
+    commentsPerUser: 5
+    window: 3600 # 1 hour
+
+# Integration settings
+integrations:
+  segmind:
+    enabled: true
+    apiUrl: https://api.segmind.com/v1/ace-step-audio
+    timeout: 120000 # 2 minutes
+
+  reddit:
+    enabled: true
+    features:
+      - comments
+      - votes
+      - posts
+      - media
+
+# Development settings
+development:
+  debug: false
+  mockAudio: false
+  shortRounds: false # Set true for 5-minute test rounds

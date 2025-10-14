@@ -1,0 +1,31 @@
+{
+  "name": "karma-karaoke",
+  "version": "1.0.0",
+  "description": "A Reddit party game where users collectively write parody lyrics—then AI performs the final song",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "upload": "devvit upload",
+    "playtest": "devvit playtest karma-karaoke",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "reddit",
+    "devvit",
+    "kiro",
+    "game",
+    "music",
+    "ai",
+    "karaoke"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "devvit": "^0.12.1",
+    "typescript": "^5.9.3"
+  }
+}

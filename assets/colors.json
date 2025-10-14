@@ -1,0 +1,23 @@
+{
+  "brand": {
+    "primary": "#FF9D5C",
+    "secondary": "#FF7B9D",
+    "accent": "#B89FE8",
+    "highlight": "#7EC4CF",
+    "dark": "#1C1C1C",
+    "light": "#FFFFFF"
+  },
+  "gradient": {
+    "sunset": "linear-gradient(180deg, #FF9D5C 0%, #FF7B9D 33%, #B89FE8 66%, #7EC4CF 100%)",
+    "sunsetStops": ["#FF9D5C", "#FF7B9D", "#B89FE8", "#7EC4CF"]
+  },
+  "usage": {
+    "background": "#1C1C1C",
+    "text": "#FFFFFF",
+    "textSecondary": "#A0A0A0",
+    "cardBackground": "#2A2A2A",
+    "border": "#3A3A3A",
+    "accent": "#FF7B9D",
+    "accentHover": "#FF9D5C"
+  }
+}
