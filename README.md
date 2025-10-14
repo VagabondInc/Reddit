@@ -299,3 +299,10 @@ Contributions welcome! Please:
     🎤 <strong>Let's make some karaoke magic!</strong> 🎵
   </p>
 </div>
+
+## Changelog
+
+- 2025-10-14: Landing site layout updates
+  - How to Play is single-column (was two on public site)
+  - Built With + Get the Code displayed side-by-side (two columns)
+  - Removed GitHub repo card image and API key note from Get the Code

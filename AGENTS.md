@@ -47,3 +47,8 @@ npm audit || true
 
 ## Contribution Workflow
 - Branch naming, PR template, review gates (security/perf/accessibility where relevant), release tagging, changelog policy.
+
+---
+
+## Doc Sync Log
+- 2025-10-14 (UTC): Updated landing/public layout — How to Play to single column; Built With + Get the Code to two-column; removed GitHub card and API key note. No dependency changes.
