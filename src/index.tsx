@@ -1,4 +1,4 @@
-import { Devvit, useState, SettingScope } from '@devvit/public-api';
+import { Devvit, useState, SettingScope, useAsync, useInterval } from '@devvit/public-api';
 
 // Configure Devvit plugins
 Devvit.configure({
@@ -60,38 +60,72 @@ Devvit.addCustomPostType({
   name: 'Karma Karaoke',
   description: 'A collaborative lyric-writing game with AI-generated songs',
   render: (context) => {
-    const [counter] = useState(0);
+    const [now, setNow] = useState(Date.now());
+    const postId = (context as any).postData?.id as string | undefined;
+
+    // Drive a 1s tick to update countdown
+    const ticker = useInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    ticker.start();
+
+    // Load round state for this post (created when the round was posted)
+    const { data: round } = useAsync(async () => {
+      if (!postId) return undefined;
+      const data = await context.redis.get(`round:${postId}`);
+      return data ? JSON.parse(data as string) : undefined;
+    });
+
+    // Compute remaining time
+    let timeLeft = '';
+    if (round?.endTime) {
+      const ms = Math.max(0, round.endTime - now);
+      const s = Math.floor(ms / 1000);
+      const hh = Math.floor(s / 3600).toString().padStart(2, '0');
+      const mm = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+      const ss = Math.floor(s % 60).toString().padStart(2, '0');
+      timeLeft = `${hh}:${mm}:${ss}`;
+    }
 
     return (
-      <vstack padding="large" gap="medium" alignment="center middle">
-        <text size="xxlarge" weight="bold">🎤 Karma Karaoke</text>
-        <text size="medium">Round #1</text>
+      <vstack padding="large" gap="large" alignment="center middle">
+        <image url="https://www.karma-karaoke.lol/karma-karaoke-logo-full.png" imageWidth={192} imageHeight={192} description="Karma Karaoke" />
 
+        <vstack gap="small" alignment="center middle">
+          <text size="large" color="neutral-content-weak">Round #1</text>
+        </vstack>
+
+        {/* CTA pill */}
         <vstack
-          backgroundColor="neutral-background-weak"
           padding="medium"
-          cornerRadius="medium"
+          cornerRadius="full"
+          backgroundColor="neutral-background-strong"
+          alignment="center middle"
         >
-          <text size="large" weight="bold">
+          <text size="large" weight="bold" color="neutral-content-strong">
             Make a Song About Your Least Favorite Subreddit
           </text>
         </vstack>
 
-        <vstack padding="small" gap="small">
-          <text size="small" color="neutral-content-weak">
-            💬 Submit lyrics in comments (one line per comment)
-          </text>
-          <text size="small" color="neutral-content-weak">
-            ⬆️ Upvote your favorites
-          </text>
-          <text size="small" color="neutral-content-weak">
-            ⏰ Round ends in 24 hours
-          </text>
+        {/* Bulleted rules + countdown */}
+        <vstack padding="small" gap="small" alignment="start middle">
+          <hstack gap="small" alignment="start middle">
+            <text>💬</text>
+            <text size="small" color="neutral-content-weak">Submit lyrics in comments (one line per comment)</text>
+          </hstack>
+          <hstack gap="small" alignment="start middle">
+            <text>⬆️</text>
+            <text size="small" color="neutral-content-weak">Upvote your favorites</text>
+          </hstack>
+          <hstack gap="small" alignment="start middle">
+            <text>⏰</text>
+            <text size="small" color="neutral-content-weak">
+              {timeLeft ? `Ends in ${timeLeft}` : 'Calculating end time…'}
+            </text>
+          </hstack>
         </vstack>
 
-        <text size="small" color="neutral-content-weak">
-          Powered by Devvit & Kiro
-        </text>
+        <text size="small" color="neutral-content-weak">Powered by Devvit & Kiro</text>
       </vstack>
     );
   },
@@ -102,7 +136,7 @@ Devvit.addMenuItem({
   label: 'Create Karma Karaoke Round',
   location: 'subreddit',
   onPress: async (_event, context) => {
-    const { reddit, ui } = context;
+    const { reddit, ui, redis } = context;
 
     const subreddit = await reddit.getCurrentSubreddit();
     const post = await reddit.submitPost({
@@ -115,6 +149,18 @@ Devvit.addMenuItem({
         </vstack>
       ),
     });
+
+    // Initialize and persist round state (24h window)
+    const start = Date.now();
+    const end = start + 24 * 60 * 60 * 1000;
+    const round = {
+      prompt: 'Make a Song About Your Least Favorite Subreddit',
+      roundNumber: 1,
+      status: 'active',
+      startTime: start,
+      endTime: end,
+    };
+    await redis.set(`round:${post.id}`, JSON.stringify(round));
 
     ui.showToast(`Created Karma Karaoke round!`);
     ui.navigateTo(post);
