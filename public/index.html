@@ -157,51 +157,77 @@
 
         /* Features Section */
         .features {
-            padding: 60px 0;
+            padding: 40px 0;
         }
 
         .features h2 {
             text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 50px;
+            font-size: 2.2rem;
+            margin-bottom: 28px;
         }
 
         .feature-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-bottom: 60px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            max-width: 900px;
+            margin: 0 auto 36px;
+        }
+
+        @media (max-width: 820px) {
+            .feature-grid { grid-template-columns: 1fr; }
         }
 
         .feature-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 30px;
-            transition: all 0.3s ease;
+            position: relative;
+            border-radius: 14px;
+            padding: 22px 22px 20px;
+            background: radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 60%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
+            overflow: hidden;
+        }
+
+        .feature-card::after { /* subtle gradient edge */
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: linear-gradient(135deg, rgba(255,157,92,0.25), rgba(184,159,232,0.18), rgba(126,196,207,0.18));
+            opacity: 0;
+            transition: opacity 300ms ease;
         }
 
         .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(255, 125, 157, 0.5);
-            box-shadow: 0 10px 30px rgba(255, 125, 157, 0.2);
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+            border-color: rgba(255,255,255,0.14);
         }
+        .feature-card:hover::after { opacity: 1; }
 
         .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
+            width: 32px;
+            height: 32px;
+            margin-bottom: 14px;
+            opacity: 0.9;
         }
 
         .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: #FF7B9D;
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            color: #fff;
         }
 
         .feature-card p {
-            color: #A0A0A0;
-            line-height: 1.8;
+            color: #B9BDC6;
+            line-height: 1.6;
+            font-size: 0.95rem;
         }
+
+        /* Scroll reveal */
+        .reveal { opacity: 0; transform: translateY(14px) scale(0.98); transition: opacity 500ms ease, transform 500ms ease; }
+        .reveal.visible { opacity: 1; transform: none; }
 
         /* How It Works */
         .how-it-works {
@@ -350,25 +376,37 @@
         <section class="features">
             <h2>🎵 What Makes It Special</h2>
             <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">💬</div>
+                <div class="feature-card reveal">
+                    <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="2">
+                        <rect x="5" y="7" width="30" height="18" rx="6"/>
+                        <path d="M16 25H12l-6 6v-6"/>
+                    </svg>
                     <h3>Collaborate</h3>
-                    <p>Submit your best lyric lines in the comments. One line per comment, unlimited creativity.</p>
+                    <p>Submit your best lyric lines in the comments. One line per comment—unlimited creativity.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⬆️</div>
+                <div class="feature-card reveal">
+                    <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M20 6L8 18h8v16h8V18h8z"/>
+                    </svg>
                     <h3>Vote</h3>
-                    <p>Upvote the funniest, cleverest, or catchiest lines. The community decides what makes it to the song.</p>
+                    <p>Upvote the funniest, cleverest, or catchiest lines. The community chooses the chorus.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎶</div>
-                    <h3>AI Magic</h3>
-                    <p>After 24 hours, AI generates a complete song from the top 8 lyrics. Hear your words come to life!</p>
+                <div class="feature-card reveal">
+                    <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="2">
+                        <circle cx="14" cy="30" r="4"/>
+                        <circle cx="30" cy="26" r="4"/>
+                        <path d="M18 12v14M34 8v14M18 12l12-3"/>
+                    </svg>
+                    <h3>AI Mixdown</h3>
+                    <p>After 24 hours, AI turns top‑voted lyrics into a polished track.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🏆</div>
+                <div class="feature-card reveal">
+                    <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M8 10h24v6c0 6-6 10-12 10S8 22 8 16v-6z"/>
+                        <path d="M12 32h16M16 26v6M24 26v6"/>
+                    </svg>
                     <h3>Get Credit</h3>
-                    <p>Top contributors get featured when the song is revealed. Your lyric could be the chorus!</p>
+                    <p>Contributors are highlighted on every finished song—your line could be the hook.</p>
                 </div>
             </div>
         </section>
@@ -487,6 +525,12 @@ npm run build</code></pre>
       // Fit each text line to exactly the wrapper width by computing
       // a font-size (from a base ratio) and compensating with letter-spacing.
       (function () {
+        // Scroll reveal for feature cards
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target);} });
+        }, {threshold: 0.12});
+        document.querySelectorAll('.feature-card.reveal').forEach(function(el){ io.observe(el); });
+
         var BASE_RATIOS = { line1: 0.34, line2: 0.24 }; // relative to wrapper width
         function textCharCount(el) {
           var t = (el.textContent || '').trim();
