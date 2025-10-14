@@ -1,4 +1,6 @@
 import { Devvit, useState, SettingScope, useAsync, useInterval } from '@devvit/public-api';
+import { KiroHooks } from './kiroHooks.js';
+import { LyricEngine } from './lyricEngine.js';
 
 // Configure Devvit plugins
 Devvit.configure({
@@ -157,8 +159,6 @@ Devvit.addMenuItem({
   const post = await reddit.submitPost({
       title: '🎤 Karma Karaoke Round #1 – Make a Song About Your Least Favorite Subreddit',
       subredditName: subreddit.name,
-      kind: 'custom',
-      customPostType: 'Karma Karaoke',
       preview: (
         <vstack padding="medium" alignment="center middle">
           <text size="large">🎤 Karma Karaoke</text>
@@ -186,3 +186,25 @@ Devvit.addMenuItem({
 });
 
 export default Devvit;
+
+// Moderator menu: Force generate (calls server) on a specific post
+Devvit.addMenuItem({
+  label: 'Reveal Song (Generate Video)',
+  location: 'post',
+  forUserType: 'moderator',
+  onPress: async (event, context) => {
+    try {
+      const postId = (event as any).postId ?? (context as any).postId;
+      if (!postId) {
+        context.ui.showToast('No post id available');
+        return;
+      }
+      const engine = new LyricEngine(context.redis, context.reddit);
+      const hooks = new KiroHooks(engine);
+      await hooks.onRoundEnd(postId, context as any);
+      context.ui.showToast('Generation started');
+    } catch (e) {
+      context.ui.showToast('Failed to start generation');
+    }
+  },
+});

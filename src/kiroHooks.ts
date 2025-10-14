@@ -134,7 +134,7 @@ export class KiroHooks {
       }
 
       const subredditName = round.subredditName || (await context.reddit.getCurrentSubreddit()).name;
-      const resp = await context.http.fetch(`${serverBase.replace(/\/$/, '')}/api/generate`, {
+      const resp = await (context as any).http.fetch(`${serverBase.replace(/\/$/, '')}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
