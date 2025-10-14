@@ -6,6 +6,8 @@
     <title>Karma Karaoke - Turn Reddit Comments Into AI Songs</title>
     <meta name="description" content="A Reddit party game where the community writes lyrics together, votes on favorites, and an AI performs the final song. Built with Devvit & Kiro.">
     <link rel="icon" type="image/png" href="/karma-karaoke-logo-alien.png">
+    <!-- Dripicons icon font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/amitjakhu/dripicons/webfont/webfont.css">
     <style>
         * {
             margin: 0;
@@ -206,12 +208,8 @@
         }
         .feature-card:hover::after { opacity: 1; }
 
-        .feature-icon {
-            width: 32px;
-            height: 32px;
-            margin-bottom: 14px;
-            opacity: 0.9;
-        }
+        .di { display:inline-block; font-family: 'dripicons-v2' !important; }
+        .feature-icon { font-size: 28px; margin-bottom: 12px; opacity: 0.95; }
 
         .feature-card h3 {
             font-size: 1.15rem;
@@ -229,80 +227,45 @@
         .reveal { opacity: 0; transform: translateY(14px) scale(0.98); transition: opacity 500ms ease, transform 500ms ease; }
         .reveal.visible { opacity: 1; transform: none; }
 
-        /* How It Works */
-        .how-it-works {
-            padding: 60px 0;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
-            margin: 40px 0;
+        /* Split section (How to Play + Built With) */
+        .split {
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            gap: 28px;
+            margin: 46px auto;
+            max-width: 1100px;
+            align-items: start;
         }
+        @media (max-width: 980px) { .split { grid-template-columns: 1fr; } }
 
-        .how-it-works h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 50px;
+        .how {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 22px 22px 8px;
         }
+        .how h2 { font-size: 1.8rem; margin-bottom: 12px; }
+        .steps { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+        @media (max-width: 700px) { .steps { grid-template-columns: 1fr; } }
+        .step { display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:12px; background: rgba(255,255,255,0.02); }
+        .step i { font-size:20px; margin-top:2px; opacity:0.9; }
+        .step h3 { margin:0 0 4px; font-size:1.05rem; }
+        .step p { margin:0; color:#AEB3BD; line-height:1.5; font-size:0.95rem; }
 
-        .steps {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
+        .built {
+            position: relative;
+            border-radius: 16px;
+            padding: 22px;
+            overflow: hidden;
+            isolation:isolate;
+            background: radial-gradient(120% 120% at 100% 0%, rgba(255,157,92,0.18), rgba(184,159,232,0.14), rgba(126,196,207,0.12));
+            border: 1px solid rgba(255,255,255,0.1);
         }
-
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-        }
-
-        .step-number {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #FF9D5C, #FF7B9D);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .step-content h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .step-content p {
-            color: #A0A0A0;
-        }
-
-        /* Tech Stack */
-        .tech-stack {
-            padding: 60px 0;
-            text-align: center;
-        }
-
-        .tech-stack h2 {
-            font-size: 2.5rem;
-            margin-bottom: 40px;
-        }
-
-        .tech-badges {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .badge {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: #A0A0A0;
-        }
+        .built h2 { font-size:1.6rem; margin-bottom:12px; }
+        .stack { display:grid; gap:10px; }
+        .stack .row { display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:12px; background: rgba(0,0,0,0.18); }
+        .stack .row i { font-size:18px; opacity:0.95; }
+        .stack .row span { color:#D6DAE3; font-size:0.95rem; }
 
         /* Footer */
         footer {
@@ -376,90 +339,49 @@
         <section class="features">
             <h2>🎵 What Makes It Special</h2>
             <div class="feature-grid">
-                <div class="feature-card reveal">
-                    <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="2">
-                        <rect x="5" y="7" width="30" height="18" rx="6"/>
-                        <path d="M16 25H12l-6 6v-6"/>
-                    </svg>
+                <div class="feature-card reveal tilt">
+                    <i class="feature-icon dripicons-conversation"></i>
                     <h3>Collaborate</h3>
                     <p>Submit your best lyric lines in the comments. One line per comment—unlimited creativity.</p>
                 </div>
-                <div class="feature-card reveal">
-                    <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="2">
-                        <path d="M20 6L8 18h8v16h8V18h8z"/>
-                    </svg>
+                <div class="feature-card reveal tilt">
+                    <i class="feature-icon dripicons-thumbs-up"></i>
                     <h3>Vote</h3>
                     <p>Upvote the funniest, cleverest, or catchiest lines. The community chooses the chorus.</p>
                 </div>
-                <div class="feature-card reveal">
-                    <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="2">
-                        <circle cx="14" cy="30" r="4"/>
-                        <circle cx="30" cy="26" r="4"/>
-                        <path d="M18 12v14M34 8v14M18 12l12-3"/>
-                    </svg>
+                <div class="feature-card reveal tilt">
+                    <i class="feature-icon dripicons-music"></i>
                     <h3>AI Mixdown</h3>
                     <p>After 24 hours, AI turns top‑voted lyrics into a polished track.</p>
                 </div>
-                <div class="feature-card reveal">
-                    <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="2">
-                        <path d="M8 10h24v6c0 6-6 10-12 10S8 22 8 16v-6z"/>
-                        <path d="M12 32h16M16 26v6M24 26v6"/>
-                    </svg>
+                <div class="feature-card reveal tilt">
+                    <i class="feature-icon dripicons-trophy"></i>
                     <h3>Get Credit</h3>
                     <p>Contributors are highlighted on every finished song—your line could be the hook.</p>
                 </div>
             </div>
         </section>
 
-        <section class="how-it-works">
-            <div class="container">
-                <h2>🎮 How to Play</h2>
+        <section class="split">
+            <div class="how reveal">
+                <h2>How to Play</h2>
                 <div class="steps">
-                    <div class="step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h3>Find a Round</h3>
-                            <p>Look for posts with prompts like "Make a Song About Your Least Favorite Subreddit"</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h3>Submit Lyrics</h3>
-                            <p>Comment with your best one-liners. Be funny, creative, or surprisingly deep. Up to 5 submissions per round.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h3>Upvote Favorites</h3>
-                            <p>Browse others' lyrics and upvote the ones you want in the final song. The leaderboard updates live!</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <h3>Hear the Song</h3>
-                            <p>After 24 hours, AI generates the song from top lyrics. Press play and enjoy your creation!</p>
-                        </div>
-                    </div>
+                    <div class="step"><i class="dripicons-search"></i><div><h3>Find a Round</h3><p>Look for a Karma Karaoke post in your subreddit.</p></div></div>
+                    <div class="step"><i class="dripicons-conversation"></i><div><h3>Submit Lyrics</h3><p>One line per comment. Up to five submissions per round.</p></div></div>
+                    <div class="step"><i class="dripicons-thumbs-up"></i><div><h3>Vote</h3><p>Upvote the cleverest lines. Top picks make the song.</p></div></div>
+                    <div class="step"><i class="dripicons-microphone"></i><div><h3>Hear the Track</h3><p>After 24 hours, AI produces a finished mix you can play.</p></div></div>
                 </div>
             </div>
-        </section>
-
-        <section class="tech-stack">
-            <h2>⚙️ Built With</h2>
-            <div class="tech-badges">
-                <span class="badge">Reddit Devvit</span>
-                <span class="badge">Kiro Framework</span>
-                <span class="badge">TypeScript</span>
-                <span class="badge">Segmind AI</span>
-                <span class="badge">Redis</span>
-                <span class="badge">Interactive Posts</span>
-            </div>
-            <p style="margin-top: 30px; color: #A0A0A0;">
-                Open source • MIT License • Built for Hack Reddit 2025
-            </p>
+            <aside class="built reveal tilt">
+                <h2>Built With</h2>
+                <div class="stack">
+                    <div class="row"><i class="dripicons-stack"></i><span>Reddit Devvit (Blocks UI)</span></div>
+                    <div class="row"><i class="dripicons-code"></i><span>TypeScript</span></div>
+                    <div class="row"><i class="dripicons-rocket"></i><span>Kiro Hooks</span></div>
+                    <div class="row"><i class="dripicons-music"></i><span>Segmind ACE Step (Audio)</span></div>
+                    <div class="row"><i class="dripicons-cloud"></i><span>Redis KV</span></div>
+                </div>
+            </aside>
         </section>
 
         <section class="features" id="get-the-code" style="padding-top: 20px;">
@@ -530,6 +452,22 @@ npm run build</code></pre>
           entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target);} });
         }, {threshold: 0.12});
         document.querySelectorAll('.feature-card.reveal').forEach(function(el){ io.observe(el); });
+        document.querySelectorAll('.split .reveal').forEach(function(el){ io.observe(el); });
+
+        // Subtle 3D tilt on hover for interactive elements
+        function attachTilt(el){
+          var r = 6; // max rotation
+          function onMove(e){
+            var b = el.getBoundingClientRect();
+            var x = (e.clientX - b.left) / b.width - 0.5;
+            var y = (e.clientY - b.top) / b.height - 0.5;
+            el.style.transform = 'perspective(700px) rotateX(' + (-y*r).toFixed(2) + 'deg) rotateY(' + (x*r).toFixed(2) + 'deg)';
+          }
+          function reset(){ el.style.transform = ''; }
+          el.addEventListener('mousemove', onMove);
+          el.addEventListener('mouseleave', reset);
+        }
+        document.querySelectorAll('.tilt').forEach(attachTilt);
 
         var BASE_RATIOS = { line1: 0.34, line2: 0.24 }; // relative to wrapper width
         function textCharCount(el) {
