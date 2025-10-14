@@ -103,7 +103,7 @@
             font-size: calc(var(--logo-size) * 0.34);
         }
         .wordmark .line2 { /* KARAOKE */
-            font-size: calc(var(--logo-size) * 0.28);
+            font-size: calc(var(--logo-size) * 0.24);
         }
 
         .tagline {
@@ -487,7 +487,7 @@ npm run build</code></pre>
       // Fit each text line to exactly the wrapper width by computing
       // a font-size (from a base ratio) and compensating with letter-spacing.
       (function () {
-        var BASE_RATIOS = { line1: 0.34, line2: 0.28 }; // relative to wrapper width
+        var BASE_RATIOS = { line1: 0.34, line2: 0.24 }; // relative to wrapper width
         function textCharCount(el) {
           var t = (el.textContent || '').trim();
           // Treat spaces as non-expanding for spacing calc
