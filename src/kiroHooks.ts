@@ -1,5 +1,5 @@
 import { TriggerContext, Comment } from '@devvit/public-api';
-import { LyricEngine } from './lyricEngine.js';
+import { LyricEngine, parseStartCommand } from './lyricEngine.js';
 
 export interface RoundState {
   prompt: string;
@@ -8,58 +8,63 @@ export interface RoundState {
   startTime: number;
   endTime: number;
   subredditName?: string;
-  videoPostUrl?: string;
+  songPostUrl?: string;
+  startedBy?: string;
+  durationMinutes?: number;
 }
 
 export class KiroHooks {
   private lyricEngine: LyricEngine;
 
-  // Round duration in milliseconds (default: 24 hours)
-  private readonly ROUND_DURATION = 24 * 60 * 60 * 1000;
-
   constructor(lyricEngine: LyricEngine) {
     this.lyricEngine = lyricEngine;
   }
 
-  /**
-   * Hook: Triggered when a new comment is added to a Karma Karaoke post
-   */
   async onCommentAdd(comment: Comment, context: TriggerContext): Promise<void> {
     try {
       const postId = comment.postId;
       const { redis } = context;
 
-      // Get current round state
-      const roundKey = `round:${postId}`;
-      const roundData = await redis.get(roundKey);
+      const startCmd = parseStartCommand(comment.body || '');
+      if (startCmd.isStart) {
+        const existing = await redis.get(`round:${postId}`);
+        if (existing) {
+          return;
+        }
 
+        const fallbackMins = Number((await context.settings.get('DEFAULT_ROUND_MINUTES')) || 60);
+        const requested = startCmd.minutes ?? fallbackMins;
+        const bounded = Math.max(1, Math.min(24 * 60, requested));
+        await this.createRound(
+          postId,
+          'Karma Karaoke thread song',
+          1,
+          bounded,
+          comment.authorName || 'Anonymous',
+          context
+        );
+        await context.reddit.submitComment({
+          id: postId,
+          text: `🎤 Karma Karaoke started by u/${comment.authorName || 'Anonymous'}! Countdown: **${bounded} minute(s)**. Submit lyric comments now.`,
+        });
+        return;
+      }
+
+      const roundData = await redis.get(`round:${postId}`);
       if (!roundData) {
-        console.log('No active round found for post:', postId);
         return;
       }
 
       const round: RoundState = JSON.parse(roundData);
+      if (round.status !== 'active') return;
 
-      // Only collect lyrics if round is active
-      if (round.status !== 'active') {
-        console.log('Round is not active, ignoring comment');
-        return;
-      }
-
-      // Check if round has expired
       if (Date.now() > round.endTime) {
-        console.log('Round has expired, triggering completion');
         await this.onRoundEnd(postId, context);
         return;
       }
 
-      // Collect the lyric
       const success = await this.lyricEngine.collectLyric(comment, postId);
-
       if (success) {
-        console.log(`Collected lyric from ${comment.authorName}: "${comment.body}"`);
-
-        // Update vote counts periodically
         await this.lyricEngine.updateVotes(postId);
       }
     } catch (error) {
@@ -67,67 +72,35 @@ export class KiroHooks {
     }
   }
 
-  /**
-   * Hook: Triggered when a comment receives upvotes
-   */
-  async onVoteChange(comment: Comment, context: TriggerContext): Promise<void> {
-    try {
-      const postId = comment.postId;
-
-      // Update vote counts for the round
-      await this.lyricEngine.updateVotes(postId);
-
-      console.log(`Updated votes for post ${postId}`);
-    } catch (error) {
-      console.error('Error in onVoteChange hook:', error);
-    }
-  }
-
-  /**
-   * Hook: Triggered when a round ends (either by timer or manually)
-   */
   async onRoundEnd(postId: string, context: TriggerContext): Promise<void> {
     try {
-      const { redis, reddit } = context;
+      const { redis } = context;
       const roundKey = `round:${postId}`;
       const roundData = await redis.get(roundKey);
 
-      if (!roundData) {
-        console.log('No round data found');
-        return;
-      }
+      if (!roundData) return;
 
       const round: RoundState = JSON.parse(roundData);
+      if (round.status !== 'active') return;
 
-      // Prevent duplicate processing
-      if (round.status !== 'active') {
-        console.log('Round already processed');
-        return;
-      }
-
-      // Update status to generating
       round.status = 'generating';
       await redis.set(roundKey, JSON.stringify(round));
 
-      console.log('Starting generation for round', round.roundNumber);
-
-      // Final vote update
       await this.lyricEngine.updateVotes(postId);
+      const songPayload = await this.lyricEngine.buildSongPayload(postId);
 
-      // Get formatted lyrics
-      const lyrics = await this.lyricEngine.formatSongLyrics(postId);
-
-      if (lyrics.includes('Not enough lyrics')) {
-        console.log('Insufficient lyrics for song generation');
+      if (!songPayload) {
         round.status = 'completed';
         await redis.set(roundKey, JSON.stringify(round));
+        await context.reddit.submitComment({
+          id: postId,
+          text: 'Not enough lyric comments to generate a song yet. Need at least 3 valid comments.',
+        });
         return;
       }
 
-      // Invoke external generation server
       const serverBase = (await context.settings.get('SERVER_BASE_URL')) as string | undefined;
       if (!serverBase) {
-        console.error('SERVER_BASE_URL not set in app settings');
         round.status = 'active';
         await redis.set(roundKey, JSON.stringify(round));
         return;
@@ -141,114 +114,77 @@ export class KiroHooks {
           postId,
           subreddit: subredditName,
           prompt: round.prompt,
-          lyrics,
+          lyrics: songPayload.lyrics,
+          topUser: songPayload.topUser,
         }),
       });
-      if (resp.ok) {
-        const data = (await resp.json()) as { ok: boolean; videoPostUrl?: string };
-        if (data.ok) {
-          round.status = 'completed';
-          round.videoPostUrl = data.videoPostUrl;
-          await redis.set(roundKey, JSON.stringify(round));
 
-          const contributors = await this.lyricEngine.getContributors(postId);
-          await context.reddit.submitComment({
-            id: postId,
-            text: `🎉 **Song Complete!**\n\nThanks to our lyricists: ${contributors.join(', ')}\n\n▶️ Play it here: ${data.videoPostUrl ?? '(publishing...)'}`,
-          });
-
-          console.log('Round completed successfully via server');
-        } else {
-          console.error('Server responded with failure for generation');
-          round.status = 'active';
-          await redis.set(roundKey, JSON.stringify(round));
-        }
-      } else {
-        console.error('HTTP error from generation server:', resp.status);
+      if (!resp.ok) {
         round.status = 'active';
         await redis.set(roundKey, JSON.stringify(round));
+        return;
       }
+
+      const data = (await resp.json()) as { ok: boolean; songPostUrl?: string };
+      if (!data.ok || !data.songPostUrl) {
+        round.status = 'active';
+        await redis.set(roundKey, JSON.stringify(round));
+        return;
+      }
+
+      round.status = 'completed';
+      round.songPostUrl = data.songPostUrl;
+      await redis.set(roundKey, JSON.stringify(round));
+
+      const contributors = await this.lyricEngine.getContributors(postId);
+      await context.reddit.submitComment({
+        id: postId,
+        text: `🎶 Song posted! Roast target: u/${songPayload.topUser}. Contributors: ${contributors.join(', ')}. Listen here: ${data.songPostUrl}`,
+      });
     } catch (error) {
       console.error('Error in onRoundEnd hook:', error);
     }
   }
 
-  /**
-   * Hook: Scheduled task to check for expired rounds
-   */
-  async checkExpiredRounds(context: TriggerContext): Promise<void> {
-    try {
-      const { redis } = context;
-
-      // In production, would scan all active rounds
-      // For now, this is a placeholder for the scheduler
-      console.log('Checking for expired rounds...');
-
-      // This would be called by a Devvit scheduler
-      // Example: Devvit.addSchedulerJob({ cron: '0 * * * *', handler: checkExpiredRounds })
-    } catch (error) {
-      console.error('Error checking expired rounds:', error);
-    }
-  }
-
-  /**
-   * Creates a new round
-   */
   async createRound(
     postId: string,
     prompt: string,
     roundNumber: number,
+    durationMinutes: number,
+    startedBy: string,
     context: TriggerContext
   ): Promise<void> {
     const { redis } = context;
+    const start = Date.now();
 
     const round: RoundState = {
       prompt,
       roundNumber,
       status: 'active',
-      startTime: Date.now(),
-      endTime: Date.now() + this.ROUND_DURATION,
+      startTime: start,
+      endTime: start + durationMinutes * 60 * 1000,
+      startedBy,
+      durationMinutes,
     };
 
     await redis.set(`round:${postId}`, JSON.stringify(round));
-    console.log(`Created round ${roundNumber} for post ${postId}`);
   }
 
-  /**
-   * Gets current round state
-   */
-  async getRoundState(postId: string, context: TriggerContext): Promise<RoundState | null> {
-    const { redis } = context;
-    const data = await redis.get(`round:${postId}`);
-    return data ? JSON.parse(data) : null;
-  }
-
-  /**
-   * Manually triggers round completion (for testing)
-   */
   async forceRoundEnd(postId: string, context: TriggerContext): Promise<void> {
-    console.log('Force ending round:', postId);
     await this.onRoundEnd(postId, context);
   }
 }
 
-/**
- * Helper: Calculates time remaining in a round
- */
 export function getRoundTimeRemaining(round: RoundState): number {
   const remaining = round.endTime - Date.now();
   return Math.max(0, remaining);
 }
 
-/**
- * Helper: Formats time remaining as a human-readable string
- */
 export function formatTimeRemaining(milliseconds: number): string {
   const hours = Math.floor(milliseconds / (60 * 60 * 1000));
   const minutes = Math.floor((milliseconds % (60 * 60 * 1000)) / (60 * 1000));
+  const seconds = Math.floor((milliseconds % (60 * 1000)) / 1000);
 
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  return `${minutes}m ${seconds}s`;
 }

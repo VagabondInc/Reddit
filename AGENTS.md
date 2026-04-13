@@ -57,3 +57,5 @@ npm audit || true
 ## Doc Sync Log
 - 2025-10-14 (UTC): Updated landing/public layout — How to Play to single column; Built With + Get the Code to two-column; removed GitHub card and API key note.
 - 2025-10-14 (UTC): Added Vercel server (`api/generate.ts`) and dependencies (openai, snoowrap, ffmpeg-static, fluent-ffmpeg). Recorded Docs Lock.
+
+- 2026-04-07 (UTC): Switched gameplay to comment-initiated countdown and Suno-based song post pipeline.

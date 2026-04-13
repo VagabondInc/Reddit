@@ -319,3 +319,9 @@ Contributions welcome! Please:
   - How to Play is single-column (was two on public site)
   - Built With + Get the Code displayed side-by-side (two columns)
   - Removed GitHub repo card image and API key note from Get the Code
+
+## April 2026 Update
+
+- Added comment-thread start command: `!karma-karaoke start <minutes>`.
+- Countdown is configurable with `DEFAULT_ROUND_MINUTES` app setting.
+- Final generation now targets Suno API and publishes a new Reddit self-post with song link and lyrics.

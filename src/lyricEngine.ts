@@ -9,19 +9,22 @@ export interface LyricLine {
   timestamp: number;
 }
 
+export interface SongPayload {
+  lyrics: string;
+  topUser: string;
+  topCommentAuthor: string;
+  commentsUsed: LyricLine[];
+}
+
 export class LyricEngine {
   constructor(
     private redis: RedisClient,
     private reddit: RedditAPIClient
   ) {}
 
-  /**
-   * Collects and validates a lyric line from a comment
-   */
   async collectLyric(comment: Comment, postId: string): Promise<boolean> {
     const line = comment.body.trim();
 
-    // Validation rules
     if (!this.isValidLyric(line)) {
       return false;
     }
@@ -34,13 +37,11 @@ export class LyricEngine {
       timestamp: Date.now(),
     };
 
-    // Store in Redis
     const key = `lyrics:${postId}`;
     const existing = await this.redis.get(key);
     const lyrics: LyricLine[] = existing ? JSON.parse(existing) : [];
 
-    // Check for duplicates
-    const isDuplicate = lyrics.some(l => l.commentId === lyric.commentId);
+    const isDuplicate = lyrics.some((l) => l.commentId === lyric.commentId);
     if (isDuplicate) {
       return false;
     }
@@ -51,9 +52,6 @@ export class LyricEngine {
     return true;
   }
 
-  /**
-   * Updates vote counts for all lyrics in a round
-   */
   async updateVotes(postId: string): Promise<void> {
     const key = `lyrics:${postId}`;
     const stored = await this.redis.get(key);
@@ -62,7 +60,6 @@ export class LyricEngine {
 
     const lyrics: LyricLine[] = JSON.parse(stored);
 
-    // Fetch updated scores from Reddit
     for (const lyric of lyrics) {
       try {
         const comment = await this.reddit.getCommentById(lyric.commentId);
@@ -72,16 +69,12 @@ export class LyricEngine {
       }
     }
 
-    // Sort by votes descending
-    lyrics.sort((a, b) => b.votes - a.votes);
+    lyrics.sort((a, b) => b.votes - a.votes || a.timestamp - b.timestamp);
 
     await this.redis.set(key, JSON.stringify(lyrics));
   }
 
-  /**
-   * Gets the top N lyrics for a round
-   */
-  async getTopLyrics(postId: string, count: number = 8): Promise<LyricLine[]> {
+  async getTopLyrics(postId: string, count: number = 12): Promise<LyricLine[]> {
     const key = `lyrics:${postId}`;
     const stored = await this.redis.get(key);
 
@@ -91,67 +84,63 @@ export class LyricEngine {
     return lyrics.slice(0, count);
   }
 
-  /**
-   * Formats top lyrics into a song structure (verse-chorus-verse)
-   */
-  async formatSongLyrics(postId: string): Promise<string> {
-    const topLyrics = await this.getTopLyrics(postId, 8);
-
-    if (topLyrics.length < 4) {
-      return 'Not enough lyrics submitted for this round.';
+  async buildSongPayload(postId: string): Promise<SongPayload | null> {
+    const topLyrics = await this.getTopLyrics(postId, 12);
+    if (topLyrics.length < 3) {
+      return null;
     }
 
-    // Structure: Verse (4 lines) + Chorus (4 lines)
-    const verse = topLyrics.slice(0, 4).map(l => l.line).join('\n');
-    const chorus = topLyrics.slice(4, 8).map(l => l.line).join('\n');
+    const topComment = topLyrics[0];
+    const topUser = topComment.author || 'Anonymous';
+    const roast = [
+      `[Verse 1 - Roast of u/${topUser}]`,
+      `u/${topUser} posts hot takes like it's a full-time chore,`,
+      `farming karma with confidence, but we all wanted more,`,
+      `you won the thread tonight, now take this playful L,`,
+      `your username is in the spotlight and the comments ring the bell.`,
+      '',
+      '[Verse 2+ - Top Comment Lyrics (verbatim)]',
+    ];
 
-    return `[Verse]\n${verse}\n\n[Chorus]\n${chorus}`;
+    const verbatimLines = topLyrics.map((line) => line.line);
+    return {
+      lyrics: [...roast, ...verbatimLines].join('\n'),
+      topUser,
+      topCommentAuthor: topUser,
+      commentsUsed: topLyrics,
+    };
   }
 
-  /**
-   * Validates if a comment is a valid lyric submission
-   */
   private isValidLyric(line: string): boolean {
-    // Must be between 10 and 200 characters
-    if (line.length < 10 || line.length > 200) {
+    if (line.length < 6 || line.length > 240) {
       return false;
     }
 
-    // Must not contain URLs
     const urlPattern = /(https?:\/\/[^\s]+)/g;
     if (urlPattern.test(line)) {
-      return false;
-    }
-
-    // Must not be all caps (shouting)
-    if (line === line.toUpperCase() && line.length > 20) {
-      return false;
-    }
-
-    // Basic profanity filter (can be expanded)
-    const profanityPattern = /\b(fuck|shit|damn)\b/gi;
-    const profanityCount = (line.match(profanityPattern) || []).length;
-    if (profanityCount > 2) {
       return false;
     }
 
     return true;
   }
 
-  /**
-   * Gets all contributors for a round
-   */
   async getContributors(postId: string): Promise<string[]> {
-    const topLyrics = await this.getTopLyrics(postId, 8);
-    const contributors = [...new Set(topLyrics.map(l => l.author))];
+    const topLyrics = await this.getTopLyrics(postId, 12);
+    const contributors = [...new Set(topLyrics.map((l) => l.author))];
     return contributors;
   }
 
-  /**
-   * Clears lyrics for a round (for testing or reset)
-   */
   async clearRound(postId: string): Promise<void> {
     await this.redis.del(`lyrics:${postId}`);
     await this.redis.del(`round:${postId}`);
   }
+}
+
+export function parseStartCommand(body: string): { isStart: boolean; minutes?: number } {
+  const normalized = body.trim().toLowerCase();
+  const m = normalized.match(/^!karma-karaoke\s+start(?:\s+(\d{1,4}))?$/);
+  if (!m) return { isStart: false };
+  const raw = m[1] ? Number(m[1]) : undefined;
+  if (!raw || Number.isNaN(raw)) return { isStart: true };
+  return { isStart: true, minutes: raw };
 }
